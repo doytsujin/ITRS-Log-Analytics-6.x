@@ -41,35 +41,17 @@ It is recommended to run the Agent as a service in a given operating system.
 
 	The Logshash, Agent and Masteragent use the same certificate file. To generate a file, use the command:
 
-			keytool -genkey -alias aka -keypass simulator -keystore lig.keystore -storepass simulator
-
-1. Logstash configuration
-
-	- input
-
-			input {
-			  http {
-			    ssl => true
-			    keystore => "/opt/lig.keystore"
-			    keystore_password => "simulator"
-			    tags => ["agents"]
-			  }
-			}
-
-	- output
-
-			output {
-			  if "agents" in [tags] {
-			elasticsearch {
-			    hosts => "localhost:9200"
-			    manage_template => false
-			    index => ".agents" 
-			    document_type => "doc" 
-			  }
-			  }
-			}
+			keytool -genkey -alias aka -keypass simulator -keystore lig.keystore -storepass simulator -keyalg RSA
 
 1. Linux host configuration
+
+	-	To install the MasterAgent on Linux RH / Centos, the net-tools package must be installed:
+				
+			yum install net-tools
+
+	-	Add an exception to the firewall to listen on TCP 8081:
+
+			firewall-cmd --permanent --zone public --add-port 8081/tcp
 
 	- 	Download `MasterBeatAgent.jar` and `agent.conf` files to any desired location;
 
@@ -80,6 +62,30 @@ It is recommended to run the Agent as a service in a given operating system.
 	- 	The agent should always be run with an indication of the working directory in which the `agent.conf` file is located;
 
 	- 	The Agent is started by the `java -jar MasterBeatAgent.jar` command.
+	- 	Configuration of the `/etc/systemd/system/masteragent.service` file:
+
+			[Unit]
+			Description=Manage MasterAgent service
+			Wants=network-online.target
+			After=network-online.target
+			
+			[Service]
+			WorkingDirectory=/opt/agent
+			ExecStart=/bin/java -jar MasterBeatAgent.jar
+			User=root
+			Type=simple
+			Restart=on-failure
+			RestartSec=10
+			
+			[Install]
+			WantedBy=multi-user.target
+
+	-	After creating the file, run the following commands:
+
+			systemctl daemon-reload
+			systemctl enable  masteragent
+			systemctl start masteragent
+
 
 1. Windows host configuration
 
@@ -88,6 +94,10 @@ It is recommended to run the Agent as a service in a given operating system.
 	- To install the agent as a service, you can use the wrapper *${installation_folder}/utils/agents\_bin/wrapper*;
 
 	- The sample of `agents.exe` and `agents.xml` files are in the *agents_bin/wrapper* directory;
+
+	- To install the service, start the PowerShell console as an administrator and execute the following commands:
+
+			New-Service -name masteragent -displayName masteragent -binaryPathName "C:\Program Files\MasterAgent\agents.exe"
 
 	- As a working directory, set the directory where the agent configuration file is located.
 
