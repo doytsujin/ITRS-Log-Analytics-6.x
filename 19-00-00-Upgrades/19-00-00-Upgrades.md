@@ -4,7 +4,6 @@
 
 1. Client Node
 
-		bash
 		yum install itrs-log-analytics-client-node-6.1.7-1.x86_64.rpm
 
 	In case of an error:
@@ -14,28 +13,24 @@
 
 	Remove below directories (this files will be replaced by packages from centOS base and epel repositories):
 
-		bash
+		
 		rm -rf /usr/lib/python2.7/site-packages/urllib3 /usr/lib/python2.7/site-packages/urllib3-1.22.dist-info/
 
 1. Data Node
 
-		bash
 		yum install itrs-log-analytics-data-node-6.1.7-1.x86_64.rpm
 
 1. Reveiw *.rpmnew files (with vimdiff for example):
 
-		bash
 		vimdiff /etc/kibana/kibana.yml /etc/kibana/kibana.yml.rpmnew
 		vimdiff /etc/elasticsearch/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml.rpmnew
 
 1. Upload new default template (if you have been using old one already):
 
-		bash
 		curl -k -XPUT -H 'Content-Type: application/json' -u logserver:logserver 'http://127.0.0.1:9200/_template/default-base-template-0' -d@/usr/share/elasticsearch/default-base-template-0.json
 
 1. Upload default windows Alert rules:
 
-		bash
 		/usr/share/kibana/elasticdump/elasticdump --input=/usr/share/kibana/kibana_objects/SIEM_Windows_RulesAlerts.json --type=data --output="http://logserver:logserver@127.0.0.1:9200/"
 
 1. Restart services:  
@@ -43,7 +38,6 @@
 
 	- Client node
 		
-			bash
 			systemctl restart kibana alert
 			systemctl restart elasticsearch
 
@@ -66,21 +60,20 @@ There were changes to alert* indices in the newest version and this index have t
 
 	- PUT Temporary template:
 
-			bash
 			curl -ulogserver:********* "elasticsearch_data_node:9200/_template/alert_old" -H 'Content-Type: application/json' -d'{"order":10,"index_patterns":["alert*-old"],"settings":{"index":{"number_of_shards":1,"auto_expand_replicas":"0-2","number_of_replicas":"0"}},"mappings":{"_default_":{"properties":{"match_body":{"type":"object","enabled":false}}}}}' -X PUT
 
 	- Reindex alert* indices:
-
-			for idx_name in alert alert_error alert_past alert_silence alert_status; do echo ${idx_name}; curl -ulogserver:********* -X POST "elasticsearch_data_node:9200/_reindex" -H 'Content-Type: application/json' -d"
-			{
-			  "source": {
-			    "index": "${idx_name}"
-			  },
-			  "dest": {
-			    "index": "${idx_name}-old"
-			  }
-			}"; echo; done
-
+```bash
+for idx_name in alert alert_error alert_past alert_silence alert_status; do echo ${idx_name}; curl -ulogserver:********* -X POST "elasticsearch_data_node:9200/_reindex" -H 'Content-Type: application/json' -d"
+{
+  "source": {
+    "index": "${idx_name}"
+  },
+  "dest": {
+    "index": "${idx_name}-old"
+  }
+}"; echo; done
+```
 	- Delete temporary template:
 
 			curl -ulogserver:********* "elasticsearch_data_node:9200/_template/alert_old" -XDELETE
@@ -91,7 +84,6 @@ There were changes to alert* indices in the newest version and this index have t
 
 1. Delete old alert* indices:
 
-		bash
 		curl -u logserver:********* "elasticsearch_data_node:9200/alert,alert_error,alert_past,alert_silence,alert_status" -XDELETE
 
 1. Proceed with the update. We will come back to alert* indices later.
@@ -154,7 +146,6 @@ There were changes to alert* indices in the newest version and this index have t
 
 1. After a successful update you should have newly created (during elasticsearch restart) alert indices: 
 
-		bash
 		curl -ulogserver:********* "elasticsearch_data_node:9200/_cat/indices/alert*"
 
 		green open alert_error       1CAsfsk4R0-rRuCu_05O_g 1 1   0 0    460b    230b
@@ -165,17 +156,17 @@ There were changes to alert* indices in the newest version and this index have t
 
 1. If you decided to keep old data you can now reindex them from indices you have created earlier:
 
-		bash
-		for idx_name in alert alert_error alert_past alert_silence alert_status; do echo ${idx_name}; curl -ulogserver:********* -X POST "elasticsearch_data_node:9200/_reindex" -H 'Content-Type: application/json' -d"
-		{
-		  "source": {
-		    "index": "${idx_name}-old"
-		  },
-		  "dest": {
-		    "index\": "${idx_name}"
-		  }
-		}"; echo; done
-
+```bash
+for idx_name in alert alert_error alert_past alert_silence alert_status; do echo ${idx_name}; curl -ulogserver:********* -X POST "elasticsearch_data_node:9200/_reindex" -H 'Content-Type: application/json' -d"
+{
+  "source": {
+    "index": "${idx_name}-old"
+  },
+  "dest": {
+    "index\": "${idx_name}"
+  }
+}"; echo; done
+```
 	- If you are sure that recovery was successful you can delete alert*-old:
 
 			curl -u logserver:********* "elasticsearch_data_node:9200/alert-old,alert_silence-old,alert_status-old,alert_error-old" -XDELETE
