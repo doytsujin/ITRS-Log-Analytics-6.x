@@ -1,5 +1,50 @@
 # **CHANGELOG** #
 
+## Version 6.1.8
+### CHANGED
+bugfix: CSV Export not working due to wrong binary definition
+
+## Version 6.1.7
+
+### Added ###
+
+- Elasticsearch nodes encryption using transport layer
+- DevTools Support
+- Wazuh support
+- Non Root deployment support
+- Auditing provide more detailed information on user activities
+- Comprehensive Windows AD Reporting
+- SIEM security rules - Windows
+- Netflow support and reporting
+- Syslog support and reporting
+- Windows Remote Management [winrm] support
+- Improved query support in CSV export
+- Cookie session TTL options can be set in kibana.yml. Default TTL: 10 min, Keep Alive: true:
+
+	- login.cookiettl
+	- login.cookieKeepAlive
+
+	- GeoLite2 database used by the geoip plugin in logstash updated
+- Hostname visible in Kibana Config tab
+- Index.translog.durability set to async as default in default-base-template
+- New alert rules:
+	
+	- ConsecutiveGrowth - Rule matches when there are values of compare_key in each checked timeframe.
+	- Difference - Rule matches for value difference between two aggregations calculated for different periods in time.
+	- FindMatch - Rule matches when in defined period of time, two correlated documents match certain strings.
+	- Recovery - This rule works generically and can cancel any previously triggered alarm.
+	- UniqueLongTerm - Rule matches when there are values of compare_key in each checked timeframe.
+
+### CHANGED
+- bugfix: Issue #113 - Intelligence mutliply fix
+- bugfix: Broken Access Control in config tab
+- bugfix: Token expires after user logout
+- bugfix: Lack of security enhancements  HTTP headers. 
+- bugfix: ANTI-CSRF mechanism
+- bugfix: Unnecessary API call for users list when accessing Report plugin
+- bugfix: Duplicated requests made by Kibana Alerts plugin
+- bugfix: Disable export of empty CSV files
+
 ## Version 6.1.6
 ### Added
 + **BREAKING CHANGE**: Support of simple upgrade procedure *alert* indices have to be reindexed
